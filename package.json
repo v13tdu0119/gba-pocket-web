@@ -1,0 +1,25 @@
+{
+  "name": "gba-pocket-web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "catalog": "node scripts/generate-rom-catalog.mjs",
+    "dev": "node scripts/generate-rom-catalog.mjs && vite",
+    "build": "node scripts/generate-rom-catalog.mjs && tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@gba-kit/gba-react": "^0.8.0",
+    "jszip": "^3.10.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.1.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0"
+  }
+}
