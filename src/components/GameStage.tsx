@@ -6,10 +6,11 @@ import {
 } from '@gba-kit/gba-react'
 import type { EmulatorBridge } from '@gba-kit/gba-browser'
 import { applySkipBiosIo, prepareCartridge } from '../emulatorBoot'
-import { formatSize, getTrack, tracks } from '../data'
+import { formatSize } from '../data'
 import { inspectRom } from '../romInspect'
 import { loadRomBuffer } from '../romLoader'
 import { usePlayer } from '../player'
+import { useRomSession } from '../romSession'
 
 type GameStageProps = {
   gameId: string | null
@@ -17,6 +18,8 @@ type GameStageProps = {
 }
 
 export function GameStage({ gameId, onSelectGame }: GameStageProps) {
+  const { tracks, getTrack, getRomBytes, addFiles } = useRomSession()
+  const fileRef = useRef<HTMLInputElement>(null)
   const game = gameId ? getTrack(gameId) : undefined
   const { emulator } = useEmulator()
   const canvasRef = useEmulatorCanvas(emulator)
@@ -27,7 +30,7 @@ export function GameStage({ gameId, onSelectGame }: GameStageProps) {
   const [phase, setPhase] = useState<'idle' | 'loading' | 'running' | 'error'>(
     'idle',
   )
-  const [message, setMessage] = useState('Chọn một game trong Playlist ROM.')
+  const [message, setMessage] = useState('Mở file .gba / .zip từ máy, hoặc chọn game trong playlist.')
   const [hint, setHint] = useState<string | null>(null)
   const [soundOn, setSoundOn] = useState(false)
 
@@ -49,7 +52,7 @@ export function GameStage({ gameId, onSelectGame }: GameStageProps) {
       emulator.pause()
       setPhase('idle')
       setHint(null)
-      setMessage('Chọn một game trong Playlist ROM.')
+      setMessage('Mở file .gba / .zip từ máy, hoặc chọn game trong playlist.')
       return
     }
 
@@ -62,9 +65,13 @@ export function GameStage({ gameId, onSelectGame }: GameStageProps) {
       setHint(null)
       setMessage('Đang tải file...')
       try {
-        const rom = await loadRomBuffer(selected.filename ?? '', (status) => {
-          if (!cancelled) setMessage(status)
-        })
+        const rom = await loadRomBuffer(
+          selected.filename ?? '',
+          (status) => {
+            if (!cancelled) setMessage(status)
+          },
+          getRomBytes(selected.id),
+        )
         if (cancelled) return
         const info = inspectRom(rom)
         if (info.kind !== 'gba') {
@@ -98,7 +105,7 @@ export function GameStage({ gameId, onSelectGame }: GameStageProps) {
       emulator.gba.input.setButtons(0)
       emulator.pause()
     }
-  }, [canvasRef, emulator, game, playTrack])
+  }, [canvasRef, emulator, game, getRomBytes, playTrack, tracks])
 
   return (
     <div className={game ? 'view stage-view is-playing' : 'view stage-view'}>
@@ -116,9 +123,31 @@ export function GameStage({ gameId, onSelectGame }: GameStageProps) {
             <p className="lede">
               {game
                 ? `${game.filename} · ${formatSize(game.size ?? 0)}`
-                : 'Bấm một tựa trong Playlist ROM để giải nén và chơi trên card này.'}
+                : 'Mở ROM từ máy này. File không được tải lên server.'}
             </p>
           </div>
+          <button
+            type="button"
+            className="rom-open"
+            onClick={() => fileRef.current?.click()}
+          >
+            Mở ROM
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".gba,.agb,.zip"
+            multiple
+            hidden
+            onChange={async (event) => {
+              const files = [...(event.target.files ?? [])]
+              event.target.value = ''
+              if (files.length === 0) return
+              const added = await addFiles(files)
+              const first = added[0]
+              if (first) onSelectGame(first.id)
+            }}
+          />
           <button
             type="button"
             className={soundOn ? 'sound-toggle is-on' : 'sound-toggle'}
@@ -148,16 +177,20 @@ export function GameStage({ gameId, onSelectGame }: GameStageProps) {
 
       {!game && (
         <section className="stage-mobile-list">
-          <h2>Tất cả game</h2>
-          <ul>
-            {tracks.map((track) => (
-              <li key={track.id}>
-                <button type="button" onClick={() => onSelectGame(track.id)}>
-                  {track.title}
-                </button>
-              </li>
-            ))}
-          </ul>
+          {tracks.length > 0 && (
+            <>
+              <h2>Tất cả game</h2>
+              <ul>
+                {tracks.map((track) => (
+                  <li key={track.id}>
+                    <button type="button" onClick={() => onSelectGame(track.id)}>
+                      {track.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </section>
       )}
     </div>

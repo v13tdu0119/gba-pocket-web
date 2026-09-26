@@ -5,6 +5,10 @@ const romDir = path.resolve('src/downloaded_roms')
 const outFile = path.resolve('src/romCatalog.ts')
 const allowed = new Set(['.zip', '.gba', '.gb', '.gbc'])
 
+if (!fs.existsSync(romDir)) {
+  fs.mkdirSync(romDir, { recursive: true })
+}
+
 function cleanTitle(filename) {
   let name = filename.replace(/\.(zip|gba|gb|gbc)$/i, '')
   name = name.replace(/_/g, ' ')

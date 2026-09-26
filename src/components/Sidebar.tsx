@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { formatSize, tracks, type View } from '../data'
+import { formatSize, type View } from '../data'
+import { useRomSession } from '../romSession'
 
 type SidebarProps = {
   view: View
@@ -16,6 +17,7 @@ const navItems: { name: 'home' | 'search' | 'library'; label: string }[] = [
 ]
 
 export function Sidebar({ view, collapsed, onToggle, onNavigate, onSelectGame }: SidebarProps) {
+  const { tracks } = useRomSession()
   const [filter, setFilter] = useState('')
   const selectedId = view.name === 'game' ? view.id : null
   const visible = useMemo(() => {
@@ -25,7 +27,7 @@ export function Sidebar({ view, collapsed, onToggle, onNavigate, onSelectGame }:
       const hay = `${track.title} ${track.filename ?? ''}`.toLowerCase()
       return hay.includes(needle)
     })
-  }, [filter])
+  }, [filter, tracks])
 
   return (
     <aside className={collapsed ? 'sidebar is-collapsed' : 'sidebar'}>

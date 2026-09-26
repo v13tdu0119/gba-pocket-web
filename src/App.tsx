@@ -7,8 +7,9 @@ import { MobileNav } from './components/MobileNav'
 import { PlaylistView } from './components/PlaylistView'
 import { SearchView } from './components/SearchView'
 import { Sidebar } from './components/Sidebar'
-import { getTrack, type View } from './data'
+import { type View } from './data'
 import { PlayerProvider } from './player'
+import { RomSessionProvider, useRomSession } from './romSession'
 
 type NavState = {
   stack: View[]
@@ -17,9 +18,11 @@ type NavState = {
 
 export default function App() {
   return (
-    <PlayerProvider>
-      <Shell />
-    </PlayerProvider>
+    <RomSessionProvider>
+      <PlayerProvider>
+        <Shell />
+      </PlayerProvider>
+    </RomSessionProvider>
   )
 }
 
@@ -30,6 +33,7 @@ function Shell() {
   })
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [pendingGameId, setPendingGameId] = useState<string | null>(null)
+  const { getTrack } = useRomSession()
   const view = nav.stack[nav.index] ?? { name: 'home' }
   const currentGameId = view.name === 'game' ? view.id : null
   const pendingTrack = pendingGameId ? getTrack(pendingGameId) : undefined

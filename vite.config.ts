@@ -41,5 +41,6 @@ function serveLocalRoms() {
 }
 
 export default defineConfig({
+  base: process.env.BASE_PATH || '/',
   plugins: [react(), serveLocalRoms()],
 })

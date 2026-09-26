@@ -382,16 +382,25 @@ h2 {
   flex: 0 0 auto;
 }
 
+.rom-open,
 .sound-toggle {
-  margin-left: auto;
   flex: 0 0 auto;
   border: 0;
   border-radius: 999px;
-  background: #2a2a2a;
-  color: var(--muted);
   padding: 8px 14px;
   font-size: 0.85rem;
   font-weight: 700;
+}
+
+.rom-open {
+  margin-left: auto;
+  background: var(--green);
+  color: #000;
+}
+
+.sound-toggle {
+  background: #2a2a2a;
+  color: var(--muted);
 }
 
 .sound-toggle.is-on {

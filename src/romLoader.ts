@@ -3,20 +3,26 @@ import JSZip from 'jszip'
 export async function loadRomBuffer(
   filename: string,
   onStatus: (message: string) => void,
+  packed?: ArrayBuffer,
+): Promise<ArrayBuffer> {
+  const bytes = packed ?? (await fetchLocalRom(filename, onStatus))
+  if (filename.toLowerCase().endsWith('.zip')) {
+    onStatus('Đang giải nén ROM...')
+    return unzipGba(bytes)
+  }
+  return bytes
+}
+
+async function fetchLocalRom(
+  filename: string,
+  onStatus: (message: string) => void,
 ): Promise<ArrayBuffer> {
   onStatus('Đang tải file...')
   const response = await fetch(`/roms/${encodeURIComponent(filename)}`)
   if (!response.ok) {
-    throw new Error('Không đọc được file trong downloaded_roms.')
+    throw new Error('Chọn file .gba hoặc .zip từ máy — site không chứa ROM.')
   }
-
-  const packed = await response.arrayBuffer()
-  if (filename.toLowerCase().endsWith('.zip')) {
-    onStatus('Đang giải nén ROM...')
-    return unzipGba(packed)
-  }
-
-  return packed
+  return response.arrayBuffer()
 }
 
 async function unzipGba(packed: ArrayBuffer): Promise<ArrayBuffer> {
